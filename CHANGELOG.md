@@ -1,5 +1,8 @@
+## 0.0.3
+- Reformating dart files
+
 ## 0.0.2
-- changed dart minium version and imported files
+- Changed dart minium version and imported files
 
 ## 0.0.1
 - Initial release

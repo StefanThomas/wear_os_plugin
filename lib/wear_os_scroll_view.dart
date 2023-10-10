@@ -22,9 +22,9 @@ class WearOsScrollView extends StatefulWidget {
 
   const WearOsScrollView(
       {super.key,
-        required this.controller,
-        required this.child,
-        this.autoHide = true});
+      required this.controller,
+      required this.child,
+      this.autoHide = true});
 
   @override
   State<WearOsScrollView> createState() => _WearOsScrollView();
@@ -71,7 +71,9 @@ class _WearOsScrollView extends State<WearOsScrollView> {
 
     // HINT: correct steps for SAMSUNG with step is exact 1.0:
     double step = (d.scroll ?? 0).abs();
-    if (step==1.0) { step/=3; }
+    if (step == 1.0) {
+      step /= 3;
+    }
 
     // calc movement:
     _movement += step;
@@ -81,24 +83,24 @@ class _WearOsScrollView extends State<WearOsScrollView> {
       final oldPos = _currentPosition;
       bool atEnd = false;
       if (_isClockWise == true) {
-        _currentPosition+=_movement*widget.speed;
-        if (_currentPosition>_maxPosition) {
+        _currentPosition += _movement * widget.speed;
+        if (_currentPosition > _maxPosition) {
           _currentPosition = _maxPosition;
-          atEnd = _currentPosition!=oldPos; // only at end, on first arrive
+          atEnd = _currentPosition != oldPos; // only at end, on first arrive
         }
       } else if (_isClockWise == false) {
-        _currentPosition -= _movement*widget.speed;
-        if (_currentPosition<0) {
-          _currentPosition=0;
-          atEnd = _currentPosition!=oldPos; // only at end, on first arrive
+        _currentPosition -= _movement * widget.speed;
+        if (_currentPosition < 0) {
+          _currentPosition = 0;
+          atEnd = _currentPosition != oldPos; // only at end, on first arrive
         }
       }
-      _movement=0;
+      _movement = 0;
       widget.controller.jumpTo(_currentPosition);
 
       final ticks = DateTime.now().millisecondsSinceEpoch;
 
-      if (atEnd || ticks-lastFeedback > 200) {
+      if (atEnd || ticks - lastFeedback > 200) {
         WearOsPlugin.instance.vibrate(effect: 'click');
         lastFeedback = ticks;
       }
@@ -113,7 +115,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
       final thisUpdate = _currentHideUpdate;
       Future.delayed(
         widget.autoHideDuration,
-            () {
+        () {
           if (thisUpdate != _currentHideUpdate) return;
           setState(() => _isScrollBarVisible = false);
         },
@@ -124,13 +126,10 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   void _updateScrollValues() {
     _maxPosition = widget.controller.position.maxScrollExtent;
 
-    _fractionOfThumb = 1 /
-        ((_maxPosition /
-            widget.controller.position.viewportDimension) +
-            1);
+    _fractionOfThumb =
+        1 / ((_maxPosition / widget.controller.position.viewportDimension) + 1);
 
-    _position = widget.controller.offset /
-        math.max(_maxPosition, 1);
+    _position = widget.controller.offset / math.max(_maxPosition, 1);
   }
 
   // ----------------------------------------------------------------------
@@ -183,7 +182,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
     return CustomPaint(
       size: MediaQuery.of(context).size,
       painter: _RoundProgressBarPainter(
-        start: _position*(1-_fractionOfThumb),
+        start: _position * (1 - _fractionOfThumb),
         length: _fractionOfThumb,
         color: Theme.of(context).highlightColor.withOpacity(1.0),
         trackPadding: widget.padding,
@@ -221,13 +220,12 @@ class _RoundProgressBarPainter extends CustomPainter {
   final double start;
   final double length;
 
-  _RoundProgressBarPainter({
-    required this.color,
-    required this.trackPadding,
-    required this.trackWidth,
-    this.start = 0,
-    this.length = 1
-  });
+  _RoundProgressBarPainter(
+      {required this.color,
+      required this.trackPadding,
+      required this.trackWidth,
+      this.start = 0,
+      this.length = 1});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -237,7 +235,7 @@ class _RoundProgressBarPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    if (WearOsApp.isRound.value!=false) {
+    if (WearOsApp.isRound.value != false) {
       final centerOffset = Offset(
         size.width / 2,
         size.height / 2,
@@ -253,18 +251,18 @@ class _RoundProgressBarPainter extends CustomPainter {
             width: innerWidth,
             height: innerHeight,
           ),
-          _startingAngle + _angleLength*start,
-          _angleLength*length,
+          _startingAngle + _angleLength * start,
+          _angleLength * length,
           true,
         );
 
       canvas.drawPath(path, paint);
     } else {
       // rectangular:
-      final space = trackPadding - trackWidth/2;
-      final h = size.height - space*2;
-      Offset top = Offset(size.width - space, space + h*start);
-      Offset bottom = Offset(size.width - space, space + h*(start+length) );
+      final space = trackPadding - trackWidth / 2;
+      final h = size.height - space * 2;
+      Offset top = Offset(size.width - space, space + h * start);
+      Offset bottom = Offset(size.width - space, space + h * (start + length));
 
       canvas.drawLine(top, bottom, paint);
     }

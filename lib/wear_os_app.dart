@@ -12,8 +12,9 @@ class WearOsApp extends StatelessWidget {
   // init global stuff:
   static init() async {
     if (isRound.value == null) {
-      WearOsPlugin.instance.isScreenRound().then((value) =>
-      isRound.value = value);
+      WearOsPlugin.instance
+          .isScreenRound()
+          .then((value) => isRound.value = value);
     }
     if (model.value == null) {
       WearOsPlugin.instance.getModel().then((value) {
@@ -22,8 +23,9 @@ class WearOsApp extends StatelessWidget {
       });
     }
     if (appVersion.value == null) {
-      WearOsPlugin.instance.getAppVersion().then((value) =>
-      appVersion.value = value);
+      WearOsPlugin.instance
+          .getAppVersion()
+          .then((value) => appVersion.value = value);
     }
   }
 
@@ -33,20 +35,18 @@ class WearOsApp extends StatelessWidget {
   final Color splashBackgroundColor;
   final Duration splashDuration;
 
-  WearOsApp({super.key,
-    this.screenBuilder,
-    this.splashIcon,
-    this.splashBackgroundColor = Colors.black,
-    this.onStarted,
-    this.splashDuration = const Duration(seconds: 1)});
+  WearOsApp(
+      {super.key,
+      this.screenBuilder,
+      this.splashIcon,
+      this.splashBackgroundColor = Colors.black,
+      this.onStarted,
+      this.splashDuration = const Duration(seconds: 1)});
 
   final ValueNotifier<int> notify = ValueNotifier(0);
 
   _buildSplash(BuildContext context) {
-    final w = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final w = MediaQuery.of(context).size.width;
     return WearOsClipper(
         child: Container(
             color: splashBackgroundColor,

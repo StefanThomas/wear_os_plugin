@@ -39,8 +39,8 @@ class WearOsPlugin {
 
   Future<void> vibrate(
       {Duration duration = const Duration(milliseconds: 100),
-        int amplitude = 100,
-        String effect = ""}) async {
+      int amplitude = 100,
+      String effect = ""}) async {
     return await methodChannel.invokeMethod<void>('vibrate', {
       'duration': duration.inMilliseconds,
       'amplitude': amplitude,

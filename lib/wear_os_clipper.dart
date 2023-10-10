@@ -9,8 +9,15 @@ class WearOsClipper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(animation: WearOsApp.isRound, builder: (BuildContext context, Widget? child) {
-      return ClipOval(clipBehavior: WearOsApp.isRound.value==true ? Clip.antiAliasWithSaveLayer : Clip.none, child:this.child);
-    }, );
+    return AnimatedBuilder(
+      animation: WearOsApp.isRound,
+      builder: (BuildContext context, Widget? child) {
+        return ClipOval(
+            clipBehavior: WearOsApp.isRound.value == true
+                ? Clip.antiAliasWithSaveLayer
+                : Clip.none,
+            child: this.child);
+      },
+    );
   }
 }
