@@ -1,4 +1,4 @@
-package org.qooapps.wear_os_plugin_example;
+package de.thomasapps.wear_os_plugin_example;
 
 import io.flutter.embedding.android.FlutterActivity;
 
