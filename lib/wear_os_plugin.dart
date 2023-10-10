@@ -1,11 +1,6 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 
-// exported classes:
-import 'wear_os_app.dart';
-import 'wear_os_clipper.dart';
-import 'wear_os_scroll_view.dart';
-
 class WearOsPlugin {
   /// The method channel used to interact with the native platform.
   static WearOsPlugin instance = WearOsPlugin._();
