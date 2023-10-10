@@ -38,7 +38,7 @@ class WearOsApp extends StatelessWidget {
     this.splashIcon,
     this.splashBackgroundColor = Colors.black,
     this.onStarted,
-    this.splashDuration = Duration.zero});
+    this.splashDuration = const Duration(seconds: 1)});
 
   final ValueNotifier<int> notify = ValueNotifier(0);
 
