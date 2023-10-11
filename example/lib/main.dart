@@ -27,7 +27,7 @@ class MyApp extends StatefulWidget {
   final String? appVersion;
   final String? deviceModel;
 
-  const MyApp({super.key, required this.appVersion, required this.deviceModel});
+  const MyApp({super.key, this.appVersion, this.deviceModel});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -51,7 +51,10 @@ class _MyAppState extends State<MyApp> {
     items.add(SizedBox(
       height: screenHeight / 2,
       child: Center(
-        child: Text('Device:\n${widget.deviceModel}', textAlign: TextAlign.center,),
+        child: Text(
+          'Device:\n${widget.deviceModel}',
+          textAlign: TextAlign.center,
+        ),
       ),
     ));
 
@@ -75,6 +78,7 @@ class _MyAppState extends State<MyApp> {
 
     return WearOsScrollView(
       controller: scrollController,
+      autoHide: true, // if set to false, it shows the scrollbar all the time
       child: ListView(
         controller: scrollController,
         children: items,

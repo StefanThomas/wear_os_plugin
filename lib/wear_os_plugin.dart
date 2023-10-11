@@ -54,20 +54,18 @@ class WearOsPlugin {
   }
 
   Stream<MotionData>? get motionEvents {
-    _scanResultStreamController =
-        StreamController<MotionData>(onListen: () {}, onCancel: () {});
+    _scanResultStreamController?.close(); // close old stream before
+    _scanResultStreamController = StreamController<MotionData>(); // create new stream
     return _scanResultStreamController?.stream;
   }
 
   // callbacks ----------------------------------------------------------------
   void _onToDart(dynamic message) {
-    if (_scanResultStreamController != null) {
-      _scanResultStreamController!.add(MotionData(message['scroll']));
-    }
+    _scanResultStreamController!.add(MotionData(message['scroll']));
   }
 
   void _onToDartError(dynamic error) {
-    // print(error);
+    _scanResultStreamController!.addError(error);
   }
 }
 

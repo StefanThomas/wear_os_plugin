@@ -12,13 +12,17 @@ class WearOsScrollView extends StatefulWidget {
   final Widget child;
   final bool autoHide;
 
-  final double threshold = 0.2;
-  final double speed = 50.0;
-  final double padding = 8.0;
-  final double width = 8.0;
+  final double threshold = 0.2; // threshold to avoid jittering
+  final double bezelCorrection = 0.5; //  bezel correction for Samsung devices
+  final double speed = 50.0; // scroll amount in screen dimensions
+  final double padding = 8.0; // padding of scroll bar
+  final double width = 8.0; // width of scroll bar
   final Curve opacityAnimationCurve = Curves.easeInOut;
-  final Duration opacityAnimationDuration = const Duration(milliseconds: 500);
-  final Duration autoHideDuration = const Duration(milliseconds: 1500);
+  final Duration opacityAnimationDuration = const Duration(
+      milliseconds:
+          500); // animation duration for blending the scroll bar in or out
+  final Duration autoHideDuration = const Duration(
+      milliseconds: 1500); // duration for keeping the scroll bar visible
 
   const WearOsScrollView(
       {super.key,
@@ -35,21 +39,21 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   double _position = 0; // 0-1
   double _currentPosition = 0;
   double _maxPosition = 0;
-  double _fractionOfThumb = 0; // 0-1, 1=full length
-  bool _isScrollBarVisible = false;
+  double _thumbSize = 0; // 0-1, 1=full length
+  bool _isScrollBarShown = false;
   StreamSubscription<MotionData>? _motionEventStream;
 
   void _onScrolled() {
-    if (!widget.controller.hasClients) return;
+    if (widget.controller.hasClients) {
+      _currentPosition = widget.controller.offset;
 
-    _currentPosition = widget.controller.offset;
+      setState(() {
+        _isScrollBarShown = true;
+        _updateScrollValues();
+      });
 
-    setState(() {
-      _isScrollBarVisible = true;
-      _updateScrollValues();
-    });
-
-    _hideAfterDelay();
+      _hideAfterDelay();
+    }
   }
 
   // event driven scrolling: ----------------------------------------------
@@ -65,15 +69,13 @@ class _WearOsScrollView extends State<WearOsScrollView> {
 
     // direction changed, restart movement:
     if (isClockWise != _isClockWise) {
-      _movement = -widget.threshold;
+      _movement = -widget.threshold; // start with threshold to avoid jittering
       _isClockWise = isClockWise;
     }
 
-    // HINT: correct steps for SAMSUNG with step is exact 1.0:
+    // HINT: correct steps for SAMSUNG bezel, which produces steps with exact 1.0:
     double step = (d.scroll ?? 0).abs();
-    if (step == 1.0) {
-      step /= 3;
-    }
+    if (step == 1.0) step *= widget.bezelCorrection;
 
     // calc movement:
     _movement += step;
@@ -96,10 +98,11 @@ class _WearOsScrollView extends State<WearOsScrollView> {
         }
       }
       _movement = 0;
+      // scroll directly to position:
       widget.controller.jumpTo(_currentPosition);
 
+      // check duration since last haptic feedback and do haptic feedback:
       final ticks = DateTime.now().millisecondsSinceEpoch;
-
       if (atEnd || ticks - lastFeedback > 200) {
         WearOsPlugin.instance.vibrate(effect: 'click');
         lastFeedback = ticks;
@@ -117,7 +120,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
         widget.autoHideDuration,
         () {
           if (thisUpdate != _currentHideUpdate) return;
-          setState(() => _isScrollBarVisible = false);
+          setState(() => _isScrollBarShown = false);
         },
       );
     }
@@ -125,10 +128,8 @@ class _WearOsScrollView extends State<WearOsScrollView> {
 
   void _updateScrollValues() {
     _maxPosition = widget.controller.position.maxScrollExtent;
-
-    _fractionOfThumb =
+    _thumbSize =
         1 / ((_maxPosition / widget.controller.position.viewportDimension) + 1);
-
     _position = widget.controller.offset / math.max(_maxPosition, 1);
   }
 
@@ -142,6 +143,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateScrollValues();
+      setState(() {}); // show new values
       _hideAfterDelay();
     });
   }
@@ -157,14 +159,14 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   // painting: -------------------------------------------------------------
 
   Widget _addAnimatedOpacity({required Widget child}) {
-    if (!widget.autoHide) return child;
-
-    return AnimatedOpacity(
-      opacity: _isScrollBarVisible ? 1 : 0,
-      duration: widget.opacityAnimationDuration,
-      curve: widget.opacityAnimationCurve,
-      child: child,
-    );
+    return widget.autoHide
+        ? AnimatedOpacity(
+            opacity: _isScrollBarShown ? 1 : 0,
+            duration: widget.opacityAnimationDuration,
+            curve: widget.opacityAnimationCurve,
+            child: child,
+          )
+        : child;
   }
 
   _buildTrack(BuildContext context) {
@@ -182,8 +184,8 @@ class _WearOsScrollView extends State<WearOsScrollView> {
     return CustomPaint(
       size: MediaQuery.of(context).size,
       painter: _RoundProgressBarPainter(
-        start: _position * (1 - _fractionOfThumb),
-        length: _fractionOfThumb,
+        start: _position * (1 - _thumbSize),
+        length: _thumbSize,
         color: Theme.of(context).highlightColor.withOpacity(1.0),
         trackPadding: widget.padding,
         trackWidth: widget.width,
