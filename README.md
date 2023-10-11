@@ -4,7 +4,7 @@ A Flutter plugin with basic Wear OS functionality, like scrollable view with rot
 **Round Screen**
 By default all apps are Fullscreen and this means rectangular. To have round shaped apps, the app needs to have transparent backgrounds. Round screens will be visible, when you swipe away an app like this:
 
-<img src="./.doc/screenshot_round_screen.png" alt="Round Screen" style="zoom:50%;" />
+<img src="https://github.com/StefanThomas/wear_os_plugin/blob/main/.doc/screenshot_round_screen.png" alt="Round Screen" style="zoom:50%;" />
 
 Beside the general transparent behavior of the app, all widgets must be clipped which is handled automatically by the the `WearOsClipper` class.
 
@@ -12,13 +12,15 @@ The general information about the screen shape is handled by the `WearOsApp` cla
 
 These values will be initialized by using the `WearOsApp` or by calling the static `init` method.
 
+
+
 **Round Scrollbar**
 The default scrollbars are rectangular, like the basic screen layout. 
 The class `WearOsScrollbar` takes care of normal scrollbars for rectangular shaped watches:
 
-<img src="./.doc/screenshot_rectangular_scrollbar.png" alt="Rectangular" style="zoom:50%;"/>
+<img src="https://github.com/StefanThomas/wear_os_plugin/blob/main/.doc/screenshot_rectangular_scrollbar.png" alt="Rectangular" style="zoom:50%;"/>
  and round watches:
-<img src="./.doc/screenshot_round_scrollbar.png" alt="Round" style="zoom:50%;" />
+<img src="https://github.com/StefanThomas/wear_os_plugin/blob/main/.doc/screenshot_round_scrollbar.png" alt="Round" style="zoom:50%;" />
 
 
 
