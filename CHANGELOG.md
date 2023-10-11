@@ -1,3 +1,6 @@
+## 0.1.1
+- fixed doc image paths
+
 ## 0.1.0
 - fixing issues and improving code
 - fine tuning for Samsung bezel
