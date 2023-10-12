@@ -64,7 +64,8 @@ class WearOsPlugin {
   /// get a stream of all motion events, including the rotary events
   Stream<MotionData>? get motionEvents {
     _scanResultStreamController?.close(); // close old stream before
-    _scanResultStreamController = StreamController<MotionData>(); // create new stream
+    _scanResultStreamController =
+        StreamController<MotionData>(); // create new stream
     return _scanResultStreamController?.stream;
   }
 

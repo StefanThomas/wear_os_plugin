@@ -1,3 +1,6 @@
+## 0.1.3
+- source code formatted
+
 ## 0.1.2
 - fixed doc image paths
 - added mor comments
