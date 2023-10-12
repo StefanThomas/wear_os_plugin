@@ -17,26 +17,33 @@ class WearOsPlugin {
   }
 
   // methods ------------------------------------------------------------------
+
+  /// get the android platform SDK, for example 33 is Android 13
   Future<int?> getPlatformSDK() async {
     return await methodChannel.invokeMethod<int>('getPlatformSDK');
   }
 
+  /// get the android device manufacturer name
   Future<String?> getManufacturer() async {
     return await methodChannel.invokeMethod<String>('getManufacturer');
   }
 
+  /// get the android device model name
   Future<String?> getModel() async {
     return await methodChannel.invokeMethod<String>('getModel');
   }
 
+  /// get the app version string
   Future<String?> getAppVersion() async {
     return await methodChannel.invokeMethod<String>('getAppVersion');
   }
 
+  /// true if the device is round, false if its rectangular/square, null for any errors
   Future<bool?> isScreenRound() async {
     return await methodChannel.invokeMethod<bool?>('isScreenRound');
   }
 
+  /// vibrate with a given duration and amplitude, or with a given effect like 'click' (Android SDK 29+)
   Future<void> vibrate(
       {Duration duration = const Duration(milliseconds: 100),
       int amplitude = 100,
@@ -48,11 +55,13 @@ class WearOsPlugin {
     });
   }
 
+  /// close the rotary input stream
   void done() {
     _scanResultStreamController?.close();
     _scanResultStreamController = null;
   }
 
+  /// get a stream of all motion events, including the rotary events
   Stream<MotionData>? get motionEvents {
     _scanResultStreamController?.close(); // close old stream before
     _scanResultStreamController = StreamController<MotionData>(); // create new stream
@@ -70,6 +79,7 @@ class WearOsPlugin {
 }
 
 class MotionData {
+  // amount of scrolling, taken from AXIS_SCROLL
   final double? scroll;
 
   MotionData(this.scroll);

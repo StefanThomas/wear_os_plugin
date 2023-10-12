@@ -1,3 +1,7 @@
+## 0.1.2
+- fixed doc image paths
+- added mor comments
+
 ## 0.1.1
 - fixed doc image paths
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'wear_os_app.dart';
 
+/// the wrapper that clips the widget according the isRound value in the [WearOsApp]
 class WearOsClipper extends StatelessWidget {
   final Widget child;
 

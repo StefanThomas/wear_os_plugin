@@ -7,22 +7,39 @@ import 'package:flutter/material.dart';
 import 'wear_os_plugin.dart';
 import 'wear_os_app.dart';
 
+/// the scroll view listen to the rotary input from the [WearOsPlugin]
+/// and control a scrollable view like [ListView] using a shared [ScrollController]
 class WearOsScrollView extends StatefulWidget {
+  /// the shared [ScrollController] which is also used in the scrollable view like [ListView]
   final ScrollController controller;
   final Widget child;
+
+  /// autoHide: true means automatically blend out the bars, false means scrollbars are always visible
   final bool autoHide;
 
-  final double threshold = 0.2; // threshold to avoid jittering
-  final double bezelCorrection = 0.5; //  bezel correction for Samsung devices
-  final double speed = 50.0; // scroll amount in screen dimensions
-  final double padding = 8.0; // padding of scroll bar
-  final double width = 8.0; // width of scroll bar
+  /// threshold to avoid jittering
+  final double threshold = 0.2;
+
+  ///  bezel correction for Samsung devices
+  final double bezelCorrection = 0.5;
+
+  /// scroll amount in screen dimensions
+  final double speed = 50.0;
+
+  /// padding of scroll bar
+  final double padding = 8.0;
+
+  /// width of scroll bar
+  final double width = 8.0;
+
+  /// animation curve for blending the scroll bar in or out
   final Curve opacityAnimationCurve = Curves.easeInOut;
-  final Duration opacityAnimationDuration = const Duration(
-      milliseconds:
-          500); // animation duration for blending the scroll bar in or out
-  final Duration autoHideDuration = const Duration(
-      milliseconds: 1500); // duration for keeping the scroll bar visible
+
+  /// animation duration for blending the scroll bar in or out
+  final Duration opacityAnimationDuration = const Duration(milliseconds: 500);
+
+  /// duration for keeping the scroll bar visible
+  final Duration autoHideDuration = const Duration(milliseconds: 1500);
 
   const WearOsScrollView(
       {super.key,
@@ -35,7 +52,7 @@ class WearOsScrollView extends StatefulWidget {
 }
 
 class _WearOsScrollView extends State<WearOsScrollView> {
-  // old stuff:
+  // internal states:
   double _position = 0; // 0-1
   double _currentPosition = 0;
   double _maxPosition = 0;
@@ -208,7 +225,6 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   }
 }
 
-//
 class _RoundProgressBarPainter extends CustomPainter {
   // starts at the 2pm marker on an analog watch
   static const _startingAngle = (math.pi * 2) * (-2 / 24);
