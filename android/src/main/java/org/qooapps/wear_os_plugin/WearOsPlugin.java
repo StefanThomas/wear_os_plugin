@@ -74,10 +74,6 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
         Activity activity = binding.getActivity();
         // using transparent background so the round screen will be seen:
         activity.getIntent().putExtra("background_mode", "transparent");
-
-        Configuration c = activity.getResources().getConfiguration();
-        result.success(c.isScreenRound());
-
         // set motion (means rotary) event listener for main view:
         if (activity.getWindow() != null) {
             View mainView = activity.getWindow().findViewById(android.R.id.content);

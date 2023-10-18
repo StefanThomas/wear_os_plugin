@@ -1,3 +1,6 @@
+## 0.1.5
+- fixed issue
+
 ## 0.1.4
 - fixed already submitted debug message
  
