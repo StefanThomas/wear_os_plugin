@@ -7,6 +7,8 @@ class WearOsPlugin {
   static const String channelMethod = "wear_os_plugin/method";
   static const String channelEvent = "wear_os_plugin/event";
 
+  static bool? isRound;
+
   final methodChannel = const MethodChannel(channelMethod);
   StreamController<MotionData>? _scanResultStreamController;
 
@@ -14,6 +16,12 @@ class WearOsPlugin {
     const EventChannel(channelEvent)
         .receiveBroadcastStream()
         .listen(_onToDart, onError: _onToDartError);
+
+    // request some data on startup:
+    methodChannel.invokeMethod<bool?>('isScreenRound').then((rc) {
+      isRound = rc;
+      print('Wear OS Plugin: round=$rc');
+    });
   }
 
   // methods ------------------------------------------------------------------
@@ -71,11 +79,15 @@ class WearOsPlugin {
 
   // callbacks ----------------------------------------------------------------
   void _onToDart(dynamic message) {
-    _scanResultStreamController!.add(MotionData(message['scroll']));
+    if (_scanResultStreamController != null) {
+      _scanResultStreamController!.add(MotionData(message['scroll']));
+    }
   }
 
   void _onToDartError(dynamic error) {
-    _scanResultStreamController!.addError(error);
+    if (_scanResultStreamController != null) {
+      _scanResultStreamController!.addError(error);
+    }
   }
 }
 
