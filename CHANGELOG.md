@@ -1,3 +1,6 @@
+## 0.1.4
+- fixed already submitted debug message
+ 
 ## 0.1.3
 - source code formatted
 
