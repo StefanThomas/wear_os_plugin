@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'wear_os_app.dart';
+import 'wear_os_plugin.dart';
 
 /// the wrapper that clips the widget according the isRound value in the [WearOsApp]
 class WearOsClipper extends StatelessWidget {
@@ -10,15 +11,10 @@ class WearOsClipper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: WearOsApp.isRound,
-      builder: (BuildContext context, Widget? child) {
-        return ClipOval(
-            clipBehavior: WearOsApp.isRound.value == true
-                ? Clip.antiAliasWithSaveLayer
-                : Clip.none,
-            child: this.child);
-      },
-    );
+    return ClipOval(
+        clipBehavior: WearOsPlugin.screenRound == true
+            ? Clip.antiAliasWithSaveLayer
+            : Clip.none,
+        child: child);
   }
 }

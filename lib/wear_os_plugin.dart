@@ -7,7 +7,12 @@ class WearOsPlugin {
   static const String channelMethod = "wear_os_plugin/method";
   static const String channelEvent = "wear_os_plugin/event";
 
-  static bool? isRound;
+  // data, which is static over the complete plugin runtime:
+  static int? platformSDK;
+  static String? manufacturer;
+  static String? model;
+  static String? appVersion;
+  static bool? screenRound;
 
   final methodChannel = const MethodChannel(channelMethod);
   StreamController<MotionData>? _scanResultStreamController;
@@ -17,11 +22,20 @@ class WearOsPlugin {
         .receiveBroadcastStream()
         .listen(_onToDart, onError: _onToDartError);
 
-    // request some data on startup:
-    methodChannel.invokeMethod<bool?>('isScreenRound').then((rc) {
-      isRound = rc;
-      print('Wear OS Plugin: round=$rc');
-    });
+    // request the static data for the plugin runtime on startup:
+    methodChannel
+        .invokeMethod<int>('getPlatformSDK')
+        .then((rc) => platformSDK = rc);
+    methodChannel
+        .invokeMethod<String>('getManufacturer')
+        .then((rc) => manufacturer = rc);
+    methodChannel.invokeMethod<String>('getModel').then((rc) => model = rc);
+    methodChannel
+        .invokeMethod<String>('getAppVersion')
+        .then((rc) => appVersion = rc);
+    methodChannel
+        .invokeMethod<bool?>('isScreenRound')
+        .then((rc) => screenRound = rc);
   }
 
   // methods ------------------------------------------------------------------

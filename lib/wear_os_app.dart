@@ -1,43 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'wear_os_plugin.dart';
 import 'wear_os_clipper.dart';
 
 /// [WearOsApp] is the main [StatelessWidget] that take care of the screen shapes.
 class WearOsApp extends StatelessWidget {
-  /// static listenable [ValueNotifier] for the info about the screen shape, initially null, elsewhere true or false
-  static ValueNotifier<bool?> isRound = ValueNotifier(null);
-
-  /// static listenable [ValueNotifier] for device model name, initially null
-  static ValueNotifier<String?> model = ValueNotifier(null);
-
-  /// static listenable [ValueNotifier] for the info, if the app is running on emulator and then have limited hardware capabilities and is maybe for debugging only
-  static ValueNotifier<bool> isEmulator = ValueNotifier(false);
-
-  /// static listenable [ValueNotifier] for app version name, initially null
-  static ValueNotifier<String?> appVersion = ValueNotifier(null);
-
-  /// static method to initialize global stuff, needs to be called only once per app lifetime
-  static init() async {
-    if (isRound.value == null) {
-      WearOsPlugin.instance
-          .isScreenRound()
-          .then((value) => isRound.value = value);
-    }
-    if (model.value == null) {
-      WearOsPlugin.instance.getModel().then((value) {
-        model.value = value;
-        isEmulator.value = (value ?? '')
-            .startsWith('sdk_gwear'); // every emulator starts with this naming
-      });
-    }
-    if (appVersion.value == null) {
-      WearOsPlugin.instance
-          .getAppVersion()
-          .then((value) => appVersion.value = value);
-    }
-  }
-
   /// called before the main widget is starting to be build
   final Function(BuildContext context)? onStarted;
 
@@ -60,7 +26,7 @@ class WearOsApp extends StatelessWidget {
       this.splashBackgroundColor = Colors.black,
       this.onStarted,
       this.splashDuration = const Duration(seconds: 1)}) {
-    init();
+    //init();
   }
 
   _buildSplash(BuildContext context) {

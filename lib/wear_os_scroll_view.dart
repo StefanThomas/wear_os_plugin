@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'wear_os_plugin.dart';
-import 'wear_os_app.dart';
 
 /// the scroll view listen to the rotary input from the [WearOsPlugin]
 /// and control a scrollable view like [ListView] using a shared [ScrollController]
@@ -253,7 +252,7 @@ class _RoundProgressBarPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    if (WearOsApp.isRound.value != false) {
+    if (WearOsPlugin.screenRound != false) {
       final centerOffset = Offset(
         size.width / 2,
         size.height / 2,

@@ -1,3 +1,6 @@
+## 0.1.7
+- simplified state handling
+
 ## 0.1.6
 - fixed null issue
 
