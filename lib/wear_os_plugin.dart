@@ -5,7 +5,9 @@ class WearOsPlugin {
   /// The method channel used to interact with the native platform.
   static WearOsPlugin instance = WearOsPlugin._();
   static const String channelMethod = "wear_os_plugin/method";
-  static const String channelEvent = "wear_os_plugin/event";
+  static const String channelMotionEvents = "wear_os_plugin/motionEvents";
+  static const String channelKeyEvents = "wear_os_plugin/keyEvents";
+  static const String channelLifecycleEvents = "wear_os_plugin/lifecycleEvents";
 
   // data, which is static over the complete plugin runtime:
   static int? platformSDK;
@@ -15,12 +17,22 @@ class WearOsPlugin {
   static bool? screenRound;
 
   final methodChannel = const MethodChannel(channelMethod);
-  StreamController<MotionData>? _scanResultStreamController;
+  StreamController<MotionData>? _motionEventsStreamController;
+  StreamController<KeyData>? _keyEventsStreamController;
+  StreamController<String>? _lifecycleEventsStreamController;
 
   WearOsPlugin._() {
-    const EventChannel(channelEvent)
+    const EventChannel(channelMotionEvents)
         .receiveBroadcastStream()
-        .listen(_onToDart, onError: _onToDartError);
+        .listen(_onMotionEvent, onError: _onMotionEventError);
+
+    const EventChannel(channelKeyEvents)
+        .receiveBroadcastStream()
+        .listen(_onKeyEvent, onError: _onKeyEventError);
+
+    const EventChannel(channelLifecycleEvents)
+        .receiveBroadcastStream()
+        .listen(_onLifecycleEvent, onError: _onLifecycleEventError);
 
     // request the static data for the plugin runtime on startup:
     methodChannel
@@ -79,28 +91,73 @@ class WearOsPlugin {
 
   /// close the rotary input stream
   void done() {
-    _scanResultStreamController?.close();
-    _scanResultStreamController = null;
+    _motionEventsStreamController?.close();
+    _motionEventsStreamController = null;
+    _keyEventsStreamController?.close();
+    _keyEventsStreamController = null;
+    _lifecycleEventsStreamController?.close();
+    _lifecycleEventsStreamController = null;
   }
 
   /// get a stream of all motion events, including the rotary events
   Stream<MotionData>? get motionEvents {
-    _scanResultStreamController?.close(); // close old stream before
-    _scanResultStreamController =
+    _motionEventsStreamController?.close(); // close old stream before
+    _motionEventsStreamController =
         StreamController<MotionData>(); // create new stream
-    return _scanResultStreamController?.stream;
+    return _motionEventsStreamController?.stream;
+  }
+
+  /// get a stream of all key events, including the BACK button
+  Stream<KeyData>? get keyEvents {
+    _keyEventsStreamController?.close(); // close old stream before
+    _keyEventsStreamController =
+        StreamController<KeyData>(); // create new stream
+    return _keyEventsStreamController?.stream;
+  }
+
+  /// get a stream of all key events, including the BACK button
+  Stream<String>? get lifecycleEvents {
+    _lifecycleEventsStreamController?.close(); // close old stream before
+    _lifecycleEventsStreamController =
+        StreamController<String>(); // create new stream
+    return _lifecycleEventsStreamController?.stream;
   }
 
   // callbacks ----------------------------------------------------------------
-  void _onToDart(dynamic message) {
-    if (_scanResultStreamController != null) {
-      _scanResultStreamController!.add(MotionData(message['scroll']));
+  void _onMotionEvent(dynamic message) {
+    if (_motionEventsStreamController != null) {
+      _motionEventsStreamController!.add(MotionData(scroll: message['scroll']));
     }
   }
 
-  void _onToDartError(dynamic error) {
-    if (_scanResultStreamController != null) {
-      _scanResultStreamController!.addError(error);
+  void _onMotionEventError(dynamic error) {
+    if (_motionEventsStreamController != null) {
+      _motionEventsStreamController!.addError(error);
+    }
+  }
+
+  void _onKeyEvent(dynamic message) {
+    if (_keyEventsStreamController != null) {
+      _keyEventsStreamController!
+          .add(KeyData(keyCode: message['keyCode'], down: message['down']));
+    }
+  }
+
+  void _onKeyEventError(dynamic error) {
+    if (_keyEventsStreamController != null) {
+      _keyEventsStreamController!.addError(error);
+    }
+  }
+
+  void _onLifecycleEvent(dynamic message) {
+    if (_lifecycleEventsStreamController != null) {
+      _lifecycleEventsStreamController!.add(message['action']);
+    }
+  }
+
+  void _onLifecycleEventError(dynamic error) {
+    if (_lifecycleEventsStreamController != null) {
+      _lifecycleEventsStreamController!.addError(error);
     }
   }
 }
@@ -109,5 +166,15 @@ class MotionData {
   // amount of scrolling, taken from AXIS_SCROLL
   final double? scroll;
 
-  MotionData(this.scroll);
+  MotionData({this.scroll});
+}
+
+class KeyData {
+  static const int KEYCODE_BACK = 4;
+  static const int KEYCODE_TEMP_PRIMARY = 264;
+
+  final int keyCode;
+  final bool down;
+
+  KeyData({required this.keyCode, required this.down});
 }

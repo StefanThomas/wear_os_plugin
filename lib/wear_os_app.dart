@@ -8,7 +8,7 @@ class WearOsApp extends StatelessWidget {
   final Function(BuildContext context)? onStarted;
 
   /// called to create the main widget
-  final Function(BuildContext context)? screenBuilder;
+  final Function(BuildContext context) screenBuilder;
 
   /// the asset path for the Splash Icon, if null then a timer icon is shown
   final String? splashIcon;
@@ -21,7 +21,7 @@ class WearOsApp extends StatelessWidget {
 
   WearOsApp(
       {super.key,
-      this.screenBuilder,
+      required this.screenBuilder,
       this.splashIcon,
       this.splashBackgroundColor = Colors.black,
       this.onStarted,
@@ -60,7 +60,7 @@ class WearOsApp extends StatelessWidget {
               context,
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
-                    screenBuilder!(context),
+                    screenBuilder(context),
                 transitionsBuilder:
                     (context, animation, secondaryAnimation, child) {
                   return FadeTransition(

@@ -1,3 +1,9 @@
+## 0.2.0
+- added lifecycle event listener
+- added key event listener, for handling BACK key
+- improved motion event handling
+- set minimum SDK to 30 (Wear OS 3) 
+
 ## 0.1.7
 - simplified state handling
 

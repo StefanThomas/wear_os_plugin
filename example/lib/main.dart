@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:wear_os_plugin/wear_os_app.dart';
 import 'package:wear_os_plugin/wear_os_clipper.dart';
@@ -15,12 +18,44 @@ void main() async {
   // start the app:
   runApp(WearOsApp(
     screenBuilder: (context) {
+      /// handling the BACK button properly on Wear OS 4:
+      WearOsPlugin.instance.keyEvents?.listen((event) {
+        log('key event: key code = ${event.keyCode} ${event.down?'down':'up'}');
+        /// on BACK, close the topmost view or the complete app:
+        if (event.keyCode == KeyData.KEYCODE_BACK && event.down == false) {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            SystemNavigator.pop();
+          }
+        }
+      });
       return MyApp(
         appVersion: appVersion,
         deviceModel: deviceModel,
       );
     },
   ));
+}
+
+class SecondScreen extends StatelessWidget {
+  const SecondScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const WearOsClipper(
+      child: Scaffold(
+          backgroundColor: Colors.blue,
+          body: Center(
+              child: Text(
+            'Close this view\n'
+            'by using the\n'
+            'BACK button\n'
+            'on the side',
+            textAlign: TextAlign.center,
+          ))),
+    );
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -72,7 +107,14 @@ class _MyAppState extends State<MyApp> {
     items.add(SizedBox(
       height: screenHeight / 2,
       child: Center(
-        child: Text('App: ${widget.appVersion}'),
+        child: ElevatedButton(
+            child: const Text('Second Screen'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SecondScreen()),
+              );
+            }),
       ),
     ));
 
