@@ -126,19 +126,17 @@ class _WearOsScrollView extends State<WearOsScrollView> {
     }
   }
 
-  int _currentHideUpdate = 0;
+  Timer? _hideTimer;
 
   void _hideAfterDelay() {
     if (widget.autoHide) {
-      _currentHideUpdate++;
-      final thisUpdate = _currentHideUpdate;
-      Future.delayed(
-        widget.autoHideDuration,
-        () {
-          if (thisUpdate != _currentHideUpdate) return;
-          setState(() => _isScrollBarShown = false);
-        },
-      );
+      // clear previous timer:
+      _hideTimer?.cancel();
+      // start a new timeout:
+      _hideTimer = Timer(widget.autoHideDuration, () {
+        setState(() => _isScrollBarShown = false);
+        _hideTimer = null;
+      });
     }
   }
 
@@ -155,7 +153,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   void initState() {
     widget.controller.addListener(_onScrolled);
     _motionEventStream =
-        WearOsPlugin.instance.motionEvents?.listen(_onMotionEvent);
+        WearOsPlugin.instance.motionEvents.listen(_onMotionEvent);
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateScrollValues();
@@ -166,6 +164,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
 
   @override
   void dispose() {
+    _hideTimer?.cancel();
     _motionEventStream?.cancel();
     _motionEventStream = null;
     widget.controller.removeListener(_onScrolled);

@@ -19,13 +19,17 @@ class WearOsApp extends StatelessWidget {
   /// the duration for the Splash Screen
   final Duration splashDuration;
 
+  /// the App Theme
+  final ThemeData? theme;
+
   WearOsApp(
       {super.key,
       required this.screenBuilder,
       this.splashIcon,
       this.splashBackgroundColor = Colors.black,
       this.onStarted,
-      this.splashDuration = const Duration(seconds: 1)}) {
+      this.splashDuration = const Duration(seconds: 1),
+      this.theme}) {
     //init();
   }
 
@@ -45,11 +49,12 @@ class WearOsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        /// Wear OS apps should have dark background, regarding the guidelines
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
+      theme: theme ??
+          ThemeData(
+            /// Wear OS apps should have dark background, regarding the guidelines
+            brightness: Brightness.dark,
+            useMaterial3: true,
+          ),
       home: LayoutBuilder(
         builder: (BuildContext context, _) {
           // use this LayoutBuilder only as helper

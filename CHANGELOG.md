@@ -1,3 +1,8 @@
+## 0.2.1
+- multiple motion event streams possible
+- added getMeasurementSystem
+- improved scrollbar auto hide  
+
 ## 0.2.0
 - added lifecycle event listener
 - added key event listener, for handling BACK key

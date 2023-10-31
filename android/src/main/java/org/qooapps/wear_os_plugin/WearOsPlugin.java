@@ -1,11 +1,16 @@
 package org.qooapps.wear_os_plugin;
 
+import static android.window.OnBackInvokedDispatcher.PRIORITY_OVERLAY;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.icu.util.LocaleData;
+import android.icu.util.ULocale;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,10 +28,12 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
+import android.window.OnBackInvokedCallback;
 
 import androidx.annotation.NonNull;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -58,6 +65,7 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
     private EventChannel.EventSink mKeyEventsSink;
     private EventChannel.EventSink mLifecycleEventsSink;
     private final Handler mHandler = new Handler();
+    private View mMainView = null;
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -108,6 +116,7 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
         mContext = null;
     }
 
+    @SuppressLint("NewApi")
     @Override
     public void onAttachedToActivity(ActivityPluginBinding binding) {
         Activity activity = binding.getActivity();
@@ -118,12 +127,13 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
         // set motion (means rotary) event listener for main view:
         Window window = activity.getWindow();
         if (window != null) {
-            /*
             View mainView = window.findViewById(android.R.id.content);
-            if (mainView == null) mainView = window.getDecorView();
-            if (mainView.getRootView() != null) mainView = mainView.getRootView();
-            final View view = mainView;
+            // if (mainView == null) mainView = window.getDecorView();
+            // if (mainView.getRootView() != null) mainView = mainView.getRootView();
 
+            mMainView = mainView;
+            /*
+            
             final WearOsPlugin plugin = this;
             if (mainView != null) {
                 // mainView.setAlpha(0.5f);
@@ -152,6 +162,7 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
 
     @Override
     public void onDetachedFromActivity() {
+        mMainView = null;
     }
 
     @Override
@@ -187,30 +198,46 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                 result.success(c.isScreenRound());
             }
             break;
+            case "getMeasurementSystem": {
+                ULocale current = ULocale.getDefault();
+                if (LocaleData.getMeasurementSystem(current) == LocaleData.MeasurementSystem.US) {
+                    result.success("US");
+                } else if (LocaleData.getMeasurementSystem(current) == LocaleData.MeasurementSystem.UK) {
+                    result.success("UK");
+                }
+                result.success("SI");
+            }
+            break;
             case "vibrate": {
                 int duration = call.argument("duration");
                 int amplitude = call.argument("amplitude");
                 String effect = call.argument("effect");
                 Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    switch (Objects.requireNonNull(effect)) {
-                        case "click": {
-                            v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK));
-                        }
-                        break;
-                        case "tick":
-                            v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK));
-                            break;
-                        case "double_click":
-                            v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK));
-                            break;
-                        case "heavy_click":
-                            v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK));
-                            break;
-                        default:
-                            v.vibrate(VibrationEffect.createOneShot(duration, amplitude));
-                            break;
+                switch (Objects.requireNonNull(effect)) {
+                    case "click": {
+                        v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK));
                     }
+                    break;
+                    case "tick":
+                        v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK));
+                        break;
+                    case "double_click":
+                        v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK));
+                        break;
+                    case "heavy_click":
+                        v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK));
+                        break;
+                    default:
+                        v.vibrate(VibrationEffect.createOneShot(duration, amplitude));
+                        break;
+                }
+                result.success(null);
+            }
+            break;
+            case "setAppAlpha": {
+                if (mMainView != null) {
+                    double alpha = call.argument("alpha");
+                    mMainView.setAlpha((float) alpha);
                 }
                 result.success(null);
             }

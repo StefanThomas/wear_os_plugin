@@ -17,7 +17,7 @@ class WearOsPlugin {
   static bool? screenRound;
 
   final methodChannel = const MethodChannel(channelMethod);
-  StreamController<MotionData>? _motionEventsStreamController;
+  final List<StreamController<MotionData>> _motionEventsStreamController = [];
   StreamController<KeyData>? _keyEventsStreamController;
   StreamController<String>? _lifecycleEventsStreamController;
 
@@ -77,6 +77,11 @@ class WearOsPlugin {
     return await methodChannel.invokeMethod<bool?>('isScreenRound');
   }
 
+  /// get the measurement system: SI, UK or US (SI is metrical system)
+  Future<String?> getMeasurementSystem() async {
+    return await methodChannel.invokeMethod<String>('getMeasurementSystem');
+  }
+
   /// vibrate with a given duration and amplitude, or with a given effect like 'click' (Android SDK 29+)
   Future<void> vibrate(
       {Duration duration = const Duration(milliseconds: 100),
@@ -91,8 +96,11 @@ class WearOsPlugin {
 
   /// close the rotary input stream
   void done() {
-    _motionEventsStreamController?.close();
-    _motionEventsStreamController = null;
+    for (StreamController<MotionData> controller
+        in _motionEventsStreamController) {
+      controller.close();
+    }
+    _motionEventsStreamController.clear();
     _keyEventsStreamController?.close();
     _keyEventsStreamController = null;
     _lifecycleEventsStreamController?.close();
@@ -100,11 +108,11 @@ class WearOsPlugin {
   }
 
   /// get a stream of all motion events, including the rotary events
-  Stream<MotionData>? get motionEvents {
-    _motionEventsStreamController?.close(); // close old stream before
-    _motionEventsStreamController =
+  Stream<MotionData> get motionEvents {
+    StreamController<MotionData> controller =
         StreamController<MotionData>(); // create new stream
-    return _motionEventsStreamController?.stream;
+    _motionEventsStreamController.add(controller);
+    return controller.stream;
   }
 
   /// get a stream of all key events, including the BACK button
@@ -123,16 +131,23 @@ class WearOsPlugin {
     return _lifecycleEventsStreamController?.stream;
   }
 
+  Future<void> setAppAlpha(double alpha) async {
+    return await methodChannel
+        .invokeMethod<void>('setAppAlpha', {'alpha': alpha});
+  }
+
   // callbacks ----------------------------------------------------------------
   void _onMotionEvent(dynamic message) {
-    if (_motionEventsStreamController != null) {
-      _motionEventsStreamController!.add(MotionData(scroll: message['scroll']));
+    for (StreamController<MotionData> controller
+        in _motionEventsStreamController) {
+      controller.add(MotionData(scroll: message['scroll']));
     }
   }
 
   void _onMotionEventError(dynamic error) {
-    if (_motionEventsStreamController != null) {
-      _motionEventsStreamController!.addError(error);
+    for (StreamController<MotionData> controller
+        in _motionEventsStreamController) {
+      controller.addError(error);
     }
   }
 

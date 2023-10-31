@@ -1,6 +1,6 @@
 name: wear_os_plugin
 description: A Flutter plugin with basic Wear OS functionality, like scrollable view with rotary input or circular screen support
-version: 0.2.0
+version: 0.2.1
 homepage: https://github.com/StefanThomas/wear_os_plugin
 
 environment:
