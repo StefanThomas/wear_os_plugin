@@ -18,6 +18,8 @@ class WearOsPlugin {
 
   final methodChannel = const MethodChannel(channelMethod);
   final List<StreamController<MotionData>> _motionEventsStreamController = [];
+  final List<StreamController<MotionData>>
+      _registeredMotionEventsStreamController = [];
   StreamController<KeyData>? _keyEventsStreamController;
   StreamController<String>? _lifecycleEventsStreamController;
 
@@ -101,6 +103,7 @@ class WearOsPlugin {
       controller.close();
     }
     _motionEventsStreamController.clear();
+    _registeredMotionEventsStreamController.clear();
     _keyEventsStreamController?.close();
     _keyEventsStreamController = null;
     _lifecycleEventsStreamController?.close();
@@ -113,6 +116,20 @@ class WearOsPlugin {
         StreamController<MotionData>(); // create new stream
     _motionEventsStreamController.add(controller);
     return controller.stream;
+  }
+
+  StreamController<MotionData> get registerForMotionEvents {
+    StreamController<MotionData> controller =
+        StreamController<MotionData>(); // create new stream
+    _registeredMotionEventsStreamController.add(controller);
+    return controller;
+  }
+
+  unregisterFromMotionEvents(StreamController<MotionData>? controller) {
+    if (controller!=null) {
+      _registeredMotionEventsStreamController.remove(controller);
+      controller.close();
+    }
   }
 
   /// get a stream of all key events, including the BACK button
@@ -136,11 +153,25 @@ class WearOsPlugin {
         .invokeMethod<void>('setAppAlpha', {'alpha': alpha});
   }
 
+  Future<void> setKeepScreenOn(bool keepScreenOn) async {
+    return await methodChannel
+        .invokeMethod<void>('setKeepScreenOn', {'keepScreenOn': keepScreenOn});
+  }
+
+  Future<void> setScreenBrightness(double brightness) async {
+    return await methodChannel
+        .invokeMethod<void>('setScreenBrightness', {'brightness': brightness});
+  }
+
   // callbacks ----------------------------------------------------------------
   void _onMotionEvent(dynamic message) {
     for (StreamController<MotionData> controller
         in _motionEventsStreamController) {
       controller.add(MotionData(scroll: message['scroll']));
+    }
+    if (_registeredMotionEventsStreamController.isNotEmpty) {
+      _registeredMotionEventsStreamController.last
+          .add(MotionData(scroll: message['scroll']));
     }
   }
 

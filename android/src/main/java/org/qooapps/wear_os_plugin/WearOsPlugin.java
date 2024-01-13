@@ -65,6 +65,7 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
     private EventChannel.EventSink mKeyEventsSink;
     private EventChannel.EventSink mLifecycleEventsSink;
     private final Handler mHandler = new Handler();
+    private Window mWindow = null;
     private View mMainView = null;
 
     @Override
@@ -116,7 +117,6 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
         mContext = null;
     }
 
-    @SuppressLint("NewApi")
     @Override
     public void onAttachedToActivity(ActivityPluginBinding binding) {
         Activity activity = binding.getActivity();
@@ -125,35 +125,14 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
         // using transparent background so the round screen will be seen:
         activity.getIntent().putExtra("background_mode", "transparent");
         // set motion (means rotary) event listener for main view:
-        Window window = activity.getWindow();
-        if (window != null) {
-            View mainView = window.findViewById(android.R.id.content);
+        mWindow = activity.getWindow();
+        if (mWindow != null) {
+            View mainView = mWindow.findViewById(android.R.id.content);
             // if (mainView == null) mainView = window.getDecorView();
             // if (mainView.getRootView() != null) mainView = mainView.getRootView();
-
             mMainView = mainView;
-            /*
-            
-            final WearOsPlugin plugin = this;
-            if (mainView != null) {
-                // mainView.setAlpha(0.5f);
-                mainView.setOnGenericMotionListener((v, motionEvent) -> {
-                    Log.i("EVENT", "motionEvent");
-                    plugin.sendGenericMotionEvent(motionEvent);
-                    return true;
-                });
-                mainView.setOnKeyListener(new View.OnKeyListener() {
-                    @Override
-                    public boolean onKey(View view, int i, KeyEvent keyEvent) {
-                        Log.i("EVENT", "keyEvent");
-                        return false;
-                    }
-                });
-            }
-            */
-
             // get all motion and key events:
-            window.setCallback(new WindowCallbacks(window.getCallback(), this));
+            mWindow.setCallback(new WindowCallbacks(mWindow.getCallback(), this));
         }
     }
 
@@ -162,7 +141,7 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
 
     @Override
     public void onDetachedFromActivity() {
-        mMainView = null;
+        mMainView = null; mWindow = null;
     }
 
     @Override
@@ -227,6 +206,9 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                     case "heavy_click":
                         v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK));
                         break;
+                    case "tap":
+                        v.vibrate(VibrationEffect.createOneShot(50,100));
+                        break;
                     default:
                         v.vibrate(VibrationEffect.createOneShot(duration, amplitude));
                         break;
@@ -242,23 +224,33 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                 result.success(null);
             }
             break;
+            case "setKeepScreenOn": {
+                if (mWindow != null) {
+                    boolean keepScreenOn = call.argument("keepScreenOn");
+                    if (keepScreenOn) {
+                        mWindow.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    } else {
+                        mWindow.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    }
+                }
+                result.success(null);
+            }
+            break;
+            case "setScreenBrightness": {
+                if (mWindow!=null) {
+                    double brightness = call.argument("brightness");
+                    WindowManager.LayoutParams params = mWindow.getAttributes();
+                    params.screenBrightness = (float)brightness;
+                    mWindow.setAttributes(params);
+                }
+            }
+            break;
             default:
                 result.notImplemented();
                 break;
         }
     }
 
-    /*
-        private void sendSuccessMsgToEventChannel(Object msg) {
-            if (mEventSink != null)
-                runOnMainThread(() -> mEventSink.success(msg));
-        }
-
-        private void sendFailMsgToEventChannel(String errCode, String errMsg, Object errDetail) {
-            if (mEventSink != null)
-                runOnMainThread(() -> mEventSink.error(errCode, errMsg, errDetail));
-        }
-    */
     // start runnable in main thread:
     private void runOnMainThread(Runnable runnable) {
         if (Looper.myLooper() == Looper.getMainLooper()) {

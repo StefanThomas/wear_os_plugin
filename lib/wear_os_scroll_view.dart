@@ -57,7 +57,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   double _maxPosition = 0;
   double _thumbSize = 0; // 0-1, 1=full length
   bool _isScrollBarShown = false;
-  StreamSubscription<MotionData>? _motionEventStream;
+  StreamController<MotionData>? _motionEventStream;
 
   void _onScrolled() {
     if (widget.controller.hasClients) {
@@ -152,8 +152,8 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   @override
   void initState() {
     widget.controller.addListener(_onScrolled);
-    _motionEventStream =
-        WearOsPlugin.instance.motionEvents.listen(_onMotionEvent);
+    _motionEventStream = WearOsPlugin.instance.registerForMotionEvents;
+    _motionEventStream?.stream.listen(_onMotionEvent);
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateScrollValues();
@@ -165,7 +165,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   @override
   void dispose() {
     _hideTimer?.cancel();
-    _motionEventStream?.cancel();
+    WearOsPlugin.instance.unregisterFromMotionEvents(_motionEventStream);
     _motionEventStream = null;
     widget.controller.removeListener(_onScrolled);
     super.dispose();
