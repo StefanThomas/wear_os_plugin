@@ -78,7 +78,7 @@ class _WearOsScrollView extends State<WearOsScrollView> {
   int lastFeedback = 0;
 
   bool? checkClockWise(double? v) =>
-      (v == null || v == 0) ? null : (v > 0 ? true : false);
+      (v == null || v == 0) ? null : (v < 0 ? true : false);
 
   void _onMotionEvent(MotionData d) {
     final isClockWise = checkClockWise(d.scroll);
