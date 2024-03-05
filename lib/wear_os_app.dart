@@ -34,11 +34,9 @@ class WearOsApp extends StatelessWidget {
       this.onStarted,
       this.splashDuration = const Duration(seconds: 1),
       this.theme}) {
-    //init();
   }
 
   _buildSplash(BuildContext context) {
-    // final w = MediaQuery.of(context).size.width;
     return WearOsClipper(
         child: Container(
             color: splashBackgroundColor,

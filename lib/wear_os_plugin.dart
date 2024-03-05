@@ -126,7 +126,7 @@ class WearOsPlugin {
   }
 
   unregisterFromMotionEvents(StreamController<MotionData>? controller) {
-    if (controller!=null) {
+    if (controller != null) {
       _registeredMotionEventsStreamController.remove(controller);
       controller.close();
     }
@@ -148,19 +148,25 @@ class WearOsPlugin {
     return _lifecycleEventsStreamController?.stream;
   }
 
+  /// set the transparency of the app, alpha has value of 0.0 (full transparent) to 1.0 (full opaque)
   Future<void> setAppAlpha(double alpha) async {
     return await methodChannel
         .invokeMethod<void>('setAppAlpha', {'alpha': alpha});
   }
 
+  /// set the KeepScreenOn flag for this app
   Future<void> setKeepScreenOn(bool keepScreenOn) async {
     return await methodChannel
         .invokeMethod<void>('setKeepScreenOn', {'keepScreenOn': keepScreenOn});
   }
 
-  Future<void> setScreenBrightness(double brightness) async {
-    return await methodChannel
-        .invokeMethod<void>('setScreenBrightness', {'brightness': brightness});
+  /// set the brightness of the app, brightness has value of 0.0 (low) to 1.0 (high) or -1.0 (use system default)
+  Future<void> setScreenBrightness(double brightness,
+      {Duration? timeout}) async {
+    return await methodChannel.invokeMethod<void>('setScreenBrightness', {
+      'brightness': brightness,
+      'timeout': timeout?.inMilliseconds
+    });
   }
 
   // callbacks ----------------------------------------------------------------

@@ -1,10 +1,6 @@
 package org.qooapps.wear_os_plugin;
 
-import static android.window.OnBackInvokedDispatcher.PRIORITY_OVERLAY;
-
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -12,30 +8,23 @@ import android.content.res.Configuration;
 import android.icu.util.LocaleData;
 import android.icu.util.ULocale;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.util.Log;
-import android.view.ActionMode;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.SearchEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.accessibility.AccessibilityEvent;
-import android.window.OnBackInvokedCallback;
 
 import androidx.annotation.NonNull;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -67,6 +56,9 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
     private final Handler mHandler = new Handler();
     private Window mWindow = null;
     private View mMainView = null;
+
+    private float mBrightnessOriginal = -1;
+    private Timer mBrightnessTimeout = null;
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -127,10 +119,7 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
         // set motion (means rotary) event listener for main view:
         mWindow = activity.getWindow();
         if (mWindow != null) {
-            View mainView = mWindow.findViewById(android.R.id.content);
-            // if (mainView == null) mainView = window.getDecorView();
-            // if (mainView.getRootView() != null) mainView = mainView.getRootView();
-            mMainView = mainView;
+            mMainView = mWindow.findViewById(android.R.id.content);
             // get all motion and key events:
             mWindow.setCallback(new WindowCallbacks(mWindow.getCallback(), this));
         }
@@ -141,7 +130,17 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
 
     @Override
     public void onDetachedFromActivity() {
-        mMainView = null; mWindow = null;
+        // restore brightness:
+        if (mBrightnessTimeout!=null) {
+            mBrightnessTimeout.cancel();
+            mBrightnessTimeout = null;
+            WindowManager.LayoutParams params = mWindow.getAttributes();
+            params.screenBrightness = mBrightnessOriginal;
+            mWindow.setAttributes(params);
+        }
+
+        mMainView = null;
+        mWindow = null;
     }
 
     @Override
@@ -150,20 +149,17 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
 
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-        switch (call.method) {
-            case "getPlatformSDK": {
+        switch (call.method != null ? call.method : "") {
+            case "getPlatformSDK" -> {
                 result.success(Build.VERSION.SDK_INT);
             }
-            break;
-            case "getManufacturer": {
+            case "getManufacturer" -> {
                 result.success(Build.MANUFACTURER);
             }
-            break;
-            case "getModel": {
+            case "getModel" -> {
                 result.success(Build.MODEL);
             }
-            break;
-            case "getAppVersion": {
+            case "getAppVersion" -> {
                 try {
                     PackageInfo pInfo = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
                     result.success(pInfo.versionName);
@@ -171,13 +167,11 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                     result.success(null);
                 }
             }
-            break;
-            case "isScreenRound": {
+            case "isScreenRound" -> {
                 Configuration c = mContext.getResources().getConfiguration();
                 result.success(c.isScreenRound());
             }
-            break;
-            case "getMeasurementSystem": {
+            case "getMeasurementSystem" -> {
                 ULocale current = ULocale.getDefault();
                 if (LocaleData.getMeasurementSystem(current) == LocaleData.MeasurementSystem.US) {
                     result.success("US");
@@ -186,48 +180,37 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                 }
                 result.success("SI");
             }
-            break;
-            case "vibrate": {
-                int duration = call.argument("duration");
-                int amplitude = call.argument("amplitude");
+            case "vibrate" -> {
+                Integer duration = call.argument("duration");
+                Integer amplitude = call.argument("amplitude");
                 String effect = call.argument("effect");
                 Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
                 switch (Objects.requireNonNull(effect)) {
-                    case "click": {
+                    case "click" -> {
                         v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK));
                     }
-                    break;
-                    case "tick":
-                        v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK));
-                        break;
-                    case "double_click":
-                        v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK));
-                        break;
-                    case "heavy_click":
-                        v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK));
-                        break;
-                    case "tap":
-                        v.vibrate(VibrationEffect.createOneShot(50,100));
-                        break;
-                    default:
-                        v.vibrate(VibrationEffect.createOneShot(duration, amplitude));
-                        break;
+                    case "tick" ->
+                            v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK));
+                    case "double_click" ->
+                            v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK));
+                    case "heavy_click" ->
+                            v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK));
+                    case "tap" -> v.vibrate(VibrationEffect.createOneShot(50, 100));
+                    default -> v.vibrate(VibrationEffect.createOneShot(duration!=null ? duration : 100, amplitude!=null ? amplitude : 100));
                 }
                 result.success(null);
             }
-            break;
-            case "setAppAlpha": {
+            case "setAppAlpha" -> {
                 if (mMainView != null) {
-                    double alpha = call.argument("alpha");
-                    mMainView.setAlpha((float) alpha);
+                    Double alpha = call.argument("alpha");
+                    mMainView.setAlpha(alpha != null ? alpha.floatValue() : 1.0f);
                 }
                 result.success(null);
             }
-            break;
-            case "setKeepScreenOn": {
+            case "setKeepScreenOn" -> {
                 if (mWindow != null) {
-                    boolean keepScreenOn = call.argument("keepScreenOn");
-                    if (keepScreenOn) {
+                    Boolean keepScreenOn = call.argument("keepScreenOn");
+                    if (keepScreenOn != null && keepScreenOn) {
                         mWindow.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     } else {
                         mWindow.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -235,19 +218,39 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                 }
                 result.success(null);
             }
-            break;
-            case "setScreenBrightness": {
-                if (mWindow!=null) {
-                    double brightness = call.argument("brightness");
+            case "setScreenBrightness" -> {
+                if (mWindow != null) {
+                    Double brightness = call.argument("brightness");
+                    Integer timeoutInMillis = call.argument("timeout");
                     WindowManager.LayoutParams params = mWindow.getAttributes();
-                    params.screenBrightness = (float)brightness;
+
+                    if (mBrightnessTimeout!=null) {
+                        mBrightnessTimeout.cancel();
+                        mBrightnessTimeout = null;
+                    } else {
+                        mBrightnessOriginal = params.screenBrightness;
+                    }
+
+                    if (timeoutInMillis!=null && timeoutInMillis>0) {
+                        mBrightnessTimeout = new Timer();
+                        mBrightnessTimeout.schedule(new TimerTask(){
+                            @Override
+                            public void run(){
+                                runOnMainThread(() -> {
+                                    WindowManager.LayoutParams params = mWindow.getAttributes();
+                                    params.screenBrightness = mBrightnessOriginal;
+                                    mWindow.setAttributes(params);
+                                    mBrightnessTimeout = null;
+                                });
+                            }
+                        },timeoutInMillis);
+                    }
+
+                    params.screenBrightness = brightness != null ? brightness.floatValue() : -1;
                     mWindow.setAttributes(params);
                 }
             }
-            break;
-            default:
-                result.notImplemented();
-                break;
+            default -> result.notImplemented();
         }
     }
 

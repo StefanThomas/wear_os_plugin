@@ -1,3 +1,8 @@
+## 0.3.0
+- fixed reversed rotary
+- added KeepScreenOn and Brightness controlling functions
+- example gradle migrated
+
 ## 0.2.1
 - multiple motion event streams possible
 - added getMeasurementSystem
