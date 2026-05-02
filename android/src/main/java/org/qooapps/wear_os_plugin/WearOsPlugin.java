@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,8 +20,12 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.text.util.LocalePreferences;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Timer;
@@ -53,7 +58,7 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
     private EventChannel.EventSink mMotionEventsSink;
     private EventChannel.EventSink mKeyEventsSink;
     private EventChannel.EventSink mLifecycleEventsSink;
-    private final Handler mHandler = new Handler();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private Window mWindow = null;
     private View mMainView = null;
 
@@ -109,15 +114,17 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
         mContext = null;
     }
 
+    private Activity mActivity = null;
+
     @Override
     public void onAttachedToActivity(ActivityPluginBinding binding) {
-        Activity activity = binding.getActivity();
+        mActivity = binding.getActivity();
         // get all lifecycle events:
-        activity.registerActivityLifecycleCallbacks(new LifecycleCallbacks(this));
+        mActivity.registerActivityLifecycleCallbacks(new LifecycleCallbacks(this));
         // using transparent background so the round screen will be seen:
-        activity.getIntent().putExtra("background_mode", "transparent");
+        mActivity.getIntent().putExtra("background_mode", "transparent");
         // set motion (means rotary) event listener for main view:
-        mWindow = activity.getWindow();
+        mWindow = mActivity.getWindow();
         if (mWindow != null) {
             mMainView = mWindow.findViewById(android.R.id.content);
             // get all motion and key events:
@@ -161,7 +168,12 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
             }
             case "getAppVersion" -> {
                 try {
-                    PackageInfo pInfo = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
+                    PackageInfo pInfo;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        pInfo = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), PackageManager.PackageInfoFlags.of(0));
+                    } else {
+                        pInfo = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
+                    }
                     result.success(pInfo.versionName);
                 } catch (PackageManager.NameNotFoundException e) {
                     result.success(null);
@@ -184,7 +196,13 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                 Integer duration = call.argument("duration");
                 Integer amplitude = call.argument("amplitude");
                 String effect = call.argument("effect");
-                Vibrator v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+                Vibrator v;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    VibratorManager vibratorManager = (VibratorManager) mContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+                    v = vibratorManager.getDefaultVibrator();
+                } else {
+                    v = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+                }
                 switch (Objects.requireNonNull(effect)) {
                     case "click" -> {
                         v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK));
@@ -249,6 +267,26 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                     params.screenBrightness = brightness != null ? brightness.floatValue() : -1;
                     mWindow.setAttributes(params);
                 }
+            }
+            case "requestPermissions" -> {
+                if (mActivity != null) {
+                    List<String> permissions = call.argument("permissions");
+                    if (permissions != null) {
+                        mActivity.requestPermissions(permissions.toArray(new String[0]), 1234);
+                    }
+                }
+                result.success(null);
+            }
+            case "hasPermission" -> {
+                String permission = call.argument("permission");
+                if (permission != null) {
+                    Context context = mActivity != null ? mActivity : mContext;
+                    if (context != null) {
+                        result.success(context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED);
+                        return;
+                    }
+                }
+                result.success(false);
             }
             default -> result.notImplemented();
         }

@@ -169,6 +169,19 @@ class WearOsPlugin {
     });
   }
 
+  /// request multiple permissions
+  Future<void> requestPermissions(List<String> permissions) async {
+    return await methodChannel
+        .invokeMethod<void>('requestPermissions', {'permissions': permissions});
+  }
+
+  /// check if a permission is granted
+  Future<bool> hasPermission(String permission) async {
+    return await methodChannel.invokeMethod<bool>('hasPermission',
+            {'permission': permission}) ??
+        false;
+  }
+
   // callbacks ----------------------------------------------------------------
   void _onMotionEvent(dynamic message) {
     for (StreamController<MotionData> controller
