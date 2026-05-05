@@ -288,6 +288,19 @@ public class WearOsPlugin implements FlutterPlugin, ActivityAware, MethodCallHan
                 }
                 result.success(false);
             }
+            case "isPermissionDefined" -> {
+                String permission = call.argument("permission");
+                if (permission != null) {
+                    try {
+                        mContext.getPackageManager().getPermissionInfo(permission, 0);
+                        result.success(true);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        result.success(false);
+                    }
+                } else {
+                    result.success(false);
+                }
+            }
             default -> result.notImplemented();
         }
     }

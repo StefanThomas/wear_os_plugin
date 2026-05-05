@@ -182,6 +182,13 @@ class WearOsPlugin {
         false;
   }
 
+  /// check if a permission is defined
+  Future<bool> isPermissionDefined(String permission) async {
+    return await methodChannel.invokeMethod<bool>('isPermissionDefined',
+        {'permission': permission}) ??
+        false;
+  }
+
   // callbacks ----------------------------------------------------------------
   void _onMotionEvent(dynamic message) {
     for (StreamController<MotionData> controller

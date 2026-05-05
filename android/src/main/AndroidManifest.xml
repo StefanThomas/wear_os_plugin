@@ -6,6 +6,6 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- declare app as watch app -->
-    <uses-feature android:name="android.hardware.type.watch" />
+    <uses-feature android:name="android.hardware.type.watch" android:required="true" />
 
 </manifest>
